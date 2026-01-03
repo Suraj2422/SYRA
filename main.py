@@ -4,15 +4,16 @@ import time
 def main():
     assistant = Assistant()
 
-    print("[SYSTEM] SYRA background service started")
-    print("[SYSTEM] Press Ctrl+C to stop")
+    print("[SYSTEM] SYRA service running (Dormant by default)")
+    print("[SYSTEM] Type 'syra' to activate, 'go to sleep' to deactivate")
+    print("[SYSTEM] Ctrl+C to stop\n")
 
     try:
         while True:
             assistant.run_once()
-            time.sleep(0.5)  # low CPU usage
+            time.sleep(0.3)  # very low CPU
     except KeyboardInterrupt:
-        print("\n[SYSTEM] SYRA service stopped safely")
+        print("\n[SYSTEM] SYRA stopped safely")
 
 if __name__ == "__main__":
     main()
