@@ -1,5 +1,7 @@
 from nlp.command_parser import CommandParser
 from rpa.task_executor import TaskExecutor
+from vision.screen_capture import capture_screen
+from vision.ocr_engine import extract_text
 
 
 class Assistant:
@@ -14,7 +16,6 @@ class Assistant:
         while True:
             user_input = input(">> ")
             intent = self.parser.parse(user_input)
-
             print("[INTENT]", intent)
 
             action = intent["action"]
@@ -29,5 +30,12 @@ class Assistant:
                 print("[SHUTDOWN] SYRA shutting down.")
                 break
 
+            # 🔍 Vision demo command
+            elif action == "read_screen":
+                frame = capture_screen()
+                text = extract_text(frame)
+                print("\n[SCREEN TEXT]")
+                print(text[:1000])
+
             else:
-                print("[INFO] Command not supported yet.")
+                print("[INFO] Command not supported.")
