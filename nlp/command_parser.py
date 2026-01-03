@@ -6,6 +6,12 @@ class CommandParser:
         text = text.lower().strip()
         parts = text.split()
 
+        if text == "analyze activity":
+            return {
+                "action": "analyze activity"
+            }
+
+
         # READ SCREEN (Computer Vision command)
         if text == "read screen":
             return {

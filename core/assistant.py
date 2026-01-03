@@ -2,6 +2,8 @@ from nlp.command_parser import CommandParser
 from rpa.task_executor import TaskExecutor
 from vision.screen_capture import capture_screen
 from vision.ocr_engine import extract_text
+from vision.activity_analyzer import ActivityAnalyzer
+
 
 
 class Assistant:
@@ -9,6 +11,8 @@ class Assistant:
         print("[INIT] SYRA initialized")
         self.parser = CommandParser()
         self.executor = TaskExecutor()
+        self.analyzer = ActivityAnalyzer()
+
 
     def start(self):
         print("[START] SYRA is online. Type a command.")
@@ -36,6 +40,12 @@ class Assistant:
                 text = extract_text(frame)
                 print("\n[SCREEN TEXT]")
                 print(text[:1000])
+
+            elif action == "analyze activity":
+                frame = capture_screen()
+                result = self.analyzer.analyze(frame)
+                print("[ACTIVITY ANALYSIS]", result)
+
 
             else:
                 print("[INFO] Command not supported.")
