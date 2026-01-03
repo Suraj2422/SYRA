@@ -1,0 +1,10 @@
+pyautogui
+opencv-python
+pytesseract
+pillow
+numpy
+speechrecognition
+sounddevice
+vosk
+keyboard
+psutil
