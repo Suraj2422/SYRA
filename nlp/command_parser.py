@@ -4,39 +4,29 @@ class CommandParser:
 
     def parse(self, text):
         text = text.lower().strip()
+        parts = text.split()
 
         # OPEN APPLICATION
-        if text.startswith("open"):
-            parts = text.split(" ")
-            if len(parts) >= 2:
-                return {
-                    "action": "open_app",
-                    "target": parts[1]
-                }
-
-        # SEARCH QUERY
-        if text.startswith("search"):
-            query = text.replace("search", "").strip()
+        if len(parts) >= 2 and parts[0] == "open":
             return {
-                "action": "search",
-                "query": query
+                "action": "open_app",
+                "target": parts[1]
             }
 
         # TYPE TEXT
-        if text.startswith("type"):
-            content = text.replace("type", "").strip()
+        if parts and parts[0] == "type":
+            content = " ".join(parts[1:])
             return {
                 "action": "type_text",
                 "content": content
             }
 
-        # EXIT ASSISTANT
+        # EXIT
         if text in ["exit", "quit", "stop"]:
             return {
                 "action": "exit"
             }
 
-        # UNKNOWN COMMAND
         return {
             "action": "unknown",
             "raw": text
