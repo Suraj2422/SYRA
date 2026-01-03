@@ -8,77 +8,87 @@ from rl.agent import RLAgent
 
 class Assistant:
     def __init__(self):
-        print("[INIT] SYRA initialized")
+        print("[INIT] SYRA initialized (Phase 2)")
 
         self.parser = CommandParser()
         self.executor = TaskExecutor()
         self.analyzer = ActivityAnalyzer()
         self.agent = RLAgent()
 
-    def start(self):
-        print("[START] SYRA is online. Type a command.")
+        self.active = True  # Phase 2 Step 1: always active (will change later)
 
-        while True:
-            user_input = input(">> ")
-            intent = self.parser.parse(user_input)
+    def run_once(self):
+        """
+        One safe execution cycle.
+        Called repeatedly by main loop.
+        """
+        if not self.active:
+            return
 
-            action = intent["action"]
-            print("[INTENT]", intent)
+        try:
+            user_input = input(">> ").strip()
+        except EOFError:
+            return
 
-            # EXIT (handle early)
-            if action == "exit":
-                print("[SHUTDOWN] SYRA shutting down.")
-                break
+        if not user_input:
+            return
 
-            # READ SCREEN (CV ONLY, NO RL)
-            if action == "read_screen":
-                frame = capture_screen()
-                text = extract_text(frame)
-                print("\n[SCREEN TEXT]")
-                print(text[:1000])
-                continue
+        intent = self.parser.parse(user_input)
+        action = intent.get("action")
 
-            # -------- RL PIPELINE START --------
+        print("[INTENT]", intent)
 
-            # Capture activity for state
+        # EXIT (still supported)
+        if action == "exit":
+            print("[SHUTDOWN] SYRA exiting by command")
+            raise KeyboardInterrupt
+
+        # READ SCREEN (CV demo still valid)
+        if action == "read_screen":
             frame = capture_screen()
-            activity_info = self.analyzer.analyze(frame)
+            text = extract_text(frame)
+            print("\n[SCREEN TEXT]")
+            print(text[:1000])
+            return
 
-            state = (action, activity_info["activity"])
+        # ANALYZE ACTIVITY (video analytics)
+        if action == "analyze activity":
+            frame = capture_screen()
+            result = self.analyzer.analyze(frame)
+            print("[ACTIVITY]", result)
+            return
 
-            # RL decision
-            chosen_action = self.agent.choose_action(state)
-            print("[RL] State:", state, "Chosen action:", chosen_action)
+        # -------- RL-DRIVEN EXECUTION --------
 
-            reward = 0
+        frame = capture_screen()
+        activity_info = self.analyzer.analyze(frame)
+        state = (action, activity_info["activity"])
 
-            # Execute based on RL decision
-            if chosen_action == 0:  # execute
-                try:
-                    if action == "open_app":
-                        self.executor.open_app(intent["target"])
+        chosen_action = self.agent.choose_action(state)
+        print("[RL] State:", state, "Chosen:", chosen_action)
 
-                    elif action == "type_text":
-                        self.executor.type_text(intent["content"])
+        reward = 0
 
-                    reward = 1
+        if chosen_action == 0:  # execute
+            try:
+                if action == "open_app":
+                    self.executor.open_app(intent["target"])
 
-                except Exception as e:
-                    print("[RL ERROR]", e)
-                    reward = -1
+                elif action == "type_text":
+                    self.executor.type_text(intent["content"])
 
-            elif chosen_action == 1:  # wait
-                print("[RL] Waiting before action")
-                reward = 0
+                reward = 1
+            except Exception as e:
+                print("[ERROR]", e)
+                reward = -1
 
-            elif chosen_action == 2:  # ignore
-                print("[RL] Ignoring action")
-                reward = 0
+        elif chosen_action == 1:
+            print("[RL] Waiting (no action)")
 
-            # RL update
-            next_state = (action, activity_info["activity"])
-            self.agent.update(state, chosen_action, reward, next_state)
+        elif chosen_action == 2:
+            print("[RL] Ignored")
 
-            print("[RL] Reward:", reward)
+        next_state = (action, activity_info["activity"])
+        self.agent.update(state, chosen_action, reward, next_state)
 
-            # -------- RL PIPELINE END --------
+        print("[RL] Reward:", reward)
